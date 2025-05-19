@@ -6,7 +6,7 @@ A desktop application that automatically checks the available restaurants on [Od
 
 - Login with your getodi.com account
 - Monitors meal lists of user-selected restaurants
-- Sound notifications when a target restaurant is found
+- Notifications when a target restaurant is found
 - Customizable restaurant list
 - Uses simple Tkinter GUI
 - Automatic periodic refresh (5 minutes, can be changed in the code)
@@ -21,7 +21,7 @@ A desktop application that automatically checks the available restaurants on [Od
 
 2. **Install required Python packages:**
    ```sh
-   pip install requests beautifulsoup4
+   pip install requests beautifulsoup4 plyer
    ```
 
 3. **Run the application:**
@@ -38,5 +38,4 @@ A desktop application that automatically checks the available restaurants on [Od
 ## Notes
 
 - Works only for İzmir city by default (can be changed in the code by changing the restaurant list link).
-- Sound notifications require Windows (`winsound` module).
 - Settings are saved in `settings.json` in the same folder.

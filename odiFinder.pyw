@@ -91,7 +91,7 @@ def check_meals(session, target_texts):
 
 def main():
     """
-    Main program flow. Loads settings, asks for password, logs in, 
+    Main program flow. Loads settings, asks for password, logs in,
     and shows meals in a GUI window with refresh capabilities.
     """
     # Dark Theme Colors
@@ -107,12 +107,22 @@ def main():
 
     app_root = None  # Main application window, initialized to None
     periodic_refresh_id = None # ID for the scheduled Tkinter .after job
+    previously_found_meal_names = set() # To track meals for notification logic
+
+    PLYER_AVAILABLE = False
+    try:
+        from plyer import notification as plyer_notification
+        PLYER_AVAILABLE = True
+    except ImportError:
+        print("Plyer library not found. Windows notifications will be disabled. "
+              "Install it with 'pip install plyer'.")
 
     # Variables to be loaded or set, ensure they have default values or are checked
     username = ''
+    password = ''
     target_texts = ["Cafe Rien", "Nazilli Pide Kebap Çorba Salonu", "Çıtır Pide"]
-    sound_enabled = True
-    session = None  # <-- Add this line
+    notifications_enabled = True # Changed from sound_enabled
+    session = None
 
     try:
         # Get current script directory
@@ -126,7 +136,7 @@ def main():
                 settings = json.load(f)
                 username = settings.get('username', '')
                 target_texts = settings.get('restaurants', target_texts)
-                sound_enabled = settings.get('sound_enabled', sound_enabled)
+                notifications_enabled = settings.get('notifications_enabled', notifications_enabled) # Changed key
         except (FileNotFoundError, json.JSONDecodeError):
             # If settings file doesn't exist or is corrupted, use defaults
             pass
@@ -135,7 +145,7 @@ def main():
         login_window = tk.Tk()
         login_window.title("Login")
         login_window.configure(bg=DARK_COLOR_BG)
-        
+
         # Center the window
         window_width = 300
         window_height = 150
@@ -167,7 +177,7 @@ def main():
         login_success = False
 
         def try_login():
-            nonlocal login_success, username, session
+            nonlocal login_success, username, session, password
             username = username_entry.get().strip()
             password = password_entry.get()
 
@@ -199,7 +209,7 @@ def main():
 
         # Create the main application window
         app_root = tk.Tk()
-        app_root.title("odiFinder 1.0")
+        app_root.title("odiFinder 1.1") # Version updated
         app_root.geometry("550x450") # Set a reasonable default size
         app_root.configure(bg=DARK_COLOR_BG)
 
@@ -207,30 +217,30 @@ def main():
         controls_frame = tk.Frame(app_root, bg=WIDGET_COLOR_BG)
         controls_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=5)
 
-        last_refreshed_label = tk.Label(controls_frame, text="Last Refreshed: N/A", 
+        last_refreshed_label = tk.Label(controls_frame, text="Last Refreshed: N/A",
                                         bg=WIDGET_COLOR_BG, fg=TEXT_COLOR_FG)
         last_refreshed_label.pack(side=tk.LEFT, padx=5)
 
-        # Settings frame for sound toggle and restaurant list
+        # Settings frame for notification toggle and restaurant list
         settings_frame = tk.Frame(app_root, bg=WIDGET_COLOR_BG)
         settings_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=5)
 
-        # Sound toggle
-        sound_var = tk.BooleanVar(value=sound_enabled)
-        def toggle_sound():
-            nonlocal sound_enabled
-            sound_enabled = sound_var.get()
-            settings['sound_enabled'] = sound_enabled
+        # Notification toggle
+        notifications_var = tk.BooleanVar(value=notifications_enabled)
+        def toggle_notifications(): # Renamed from toggle_sound
+            nonlocal notifications_enabled
+            notifications_enabled = notifications_var.get()
+            settings['notifications_enabled'] = notifications_enabled # Changed key
             with open(settings_path, 'w', encoding='utf-8') as f:
                 json.dump(settings, f, indent=4)
-            print(f"Sound {'enabled' if sound_enabled else 'disabled'}")
+            print(f"Notifications {'enabled' if notifications_enabled else 'disabled'}")
 
-        sound_toggle = tk.Checkbutton(settings_frame, text="Sound Notifications", variable=sound_var, command=toggle_sound,
-                                     bg=WIDGET_COLOR_BG, fg=TEXT_COLOR_FG, 
+        notifications_toggle = tk.Checkbutton(settings_frame, text="Send Notifications", variable=notifications_var, command=toggle_notifications, # Text changed
+                                     bg=WIDGET_COLOR_BG, fg=TEXT_COLOR_FG,
                                      selectcolor=SELECT_COLOR_BG,
                                      activebackground=WIDGET_COLOR_BG, activeforeground=TEXT_COLOR_FG,
                                      highlightthickness=0, borderwidth=0)
-        sound_toggle.pack(side=tk.LEFT, padx=5)
+        notifications_toggle.pack(side=tk.LEFT, padx=5)
 
         # Restaurant list editor
         def edit_restaurants():
@@ -243,27 +253,28 @@ def main():
             edit_window.grab_set() # Make modal
 
             # Center the edit window relative to the main window
-            window_width = 400
-            window_height = 300
+            window_width_edit = 400 # Renamed to avoid conflict
+            window_height_edit = 300 # Renamed to avoid conflict
             parent_x = app_root.winfo_x()
             parent_y = app_root.winfo_y()
             parent_width = app_root.winfo_width()
             parent_height = app_root.winfo_height()
-            
-            x = parent_x + (parent_width - window_width) // 2
-            y = parent_y + (parent_height - window_height) // 2
-            edit_window.geometry(f"{window_width}x{window_height}+{x}+{y}")
+
+            x_edit = parent_x + (parent_width - window_width_edit) // 2 # Renamed
+            y_edit = parent_y + (parent_height - window_height_edit) // 2 # Renamed
+            edit_window.geometry(f"{window_width_edit}x{window_height_edit}+{x_edit}+{y_edit}")
+
 
             instruction_label = tk.Label(edit_window, text="Enter restaurants (one per line):",
                                          bg=DARK_COLOR_BG, fg=TEXT_COLOR_FG)
             instruction_label.pack(pady=(10,5))
 
-            text_area_font = tkFont.Font(family="Arial", size=12) # Font is already Arial as per original
+            text_area_font = tkFont.Font(family="Arial", size=12)
             text_area = tk.Text(edit_window, height=10, width=40,
                                 font=text_area_font,
                                 bg=TEXT_AREA_COLOR_BG, fg=TEXT_AREA_COLOR_FG,
-                                insertbackground=TEXT_AREA_COLOR_FG, # Cursor color
-                                relief=tk.SOLID, borderwidth=1, bd=1) # Use solid border
+                                insertbackground=TEXT_AREA_COLOR_FG,
+                                relief=tk.SOLID, borderwidth=1, bd=1)
             text_area.pack(padx=10, pady=5, fill=tk.BOTH, expand=True)
             text_area.insert('1.0', '\n'.join(target_texts))
 
@@ -279,8 +290,8 @@ def main():
                     edit_window.destroy()
                 else:
                     messagebox.showerror("Error", "Restaurant list cannot be empty!", parent=edit_window)
-            
-            button_frame_edit = tk.Frame(edit_window, bg=DARK_COLOR_BG) # Frame for button
+
+            button_frame_edit = tk.Frame(edit_window, bg=DARK_COLOR_BG)
             button_frame_edit.pack(pady=(5,10))
 
             save_button = tk.Button(button_frame_edit, text="Save", command=save_restaurants,
@@ -294,50 +305,71 @@ def main():
                                             activebackground=BUTTON_COLOR_ACTIVE_BG, activeforeground=BUTTON_TEXT_COLOR_FG,
                                             relief=tk.FLAT, borderwidth=0, padx=5, pady=2)
         edit_restaurants_button.pack(side=tk.LEFT, padx=5)
-        
-        # Font for meals_text_area as requested: Arial
-        meals_font = tkFont.Font(family="Arial", size=12) 
+
+        meals_font = tkFont.Font(family="Arial", size=12)
         meals_text_area = tk.Text(app_root, wrap=tk.WORD, height=15, width=60,
                                   font=meals_font,
                                   bg=TEXT_AREA_COLOR_BG, fg=TEXT_AREA_COLOR_FG,
-                                  relief=tk.SOLID, borderwidth=1, bd=1) # Use solid border
+                                  relief=tk.SOLID, borderwidth=1, bd=1)
         meals_text_area.pack(padx=10, pady=(0,10), fill=tk.BOTH, expand=True)
-        meals_text_area.config(state=tk.DISABLED) # Make text area read-only
+        meals_text_area.config(state=tk.DISABLED)
 
         def update_gui_display(text_to_display, refresh_time_str):
-            """Safely updates the GUI elements with new data."""
             if not (app_root and app_root.winfo_exists()):
-                return # Window has been closed
+                return
 
             last_refreshed_label.config(text=f"Last Refreshed: {refresh_time_str}")
             meals_text_area.config(state=tk.NORMAL)
             meals_text_area.delete(1.0, tk.END)
             meals_text_area.insert(tk.END, text_to_display)
             meals_text_area.config(state=tk.DISABLED)
-            app_root.update_idletasks() # Ensure GUI updates are processed
+            app_root.update_idletasks()
 
         # --- Refresh Logic ---
         def execute_meal_refresh():
-            nonlocal session # Allow re-assignment of session if re-login occurs
-            if not (app_root and app_root.winfo_exists()): # Don't run if window is closed
+            nonlocal session, previously_found_meal_names, password
+            if not (app_root and app_root.winfo_exists()):
                 return
 
             try:
-                current_meals = check_meals(session, target_texts) # Uses target_texts from main's scope
+                current_meals = check_meals(session, target_texts)
                 refresh_time = datetime.now()
                 refresh_time_str = refresh_time.strftime('%Y-%m-%d %H:%M:%S')
-                
+
                 output_lines = []
+                current_meal_names_now = set()
+
                 if current_meals:
                     for meal in current_meals:
                         output_lines.append(f"Restaurant: {meal['name']}")
                         output_lines.append(f"Details: {meal['details']}")
-                        output_lines.append("-" * 40) # Visual separator
-                    if sound_enabled and sound_available: # Uses sound_enabled from main's scope
-                        winsound.Beep(1000, 500)
+                        output_lines.append("-" * 40)
+                        current_meal_names_now.add(meal['name'])
+
+                    newly_found_meals_set = current_meal_names_now - previously_found_meal_names
+
+                    if newly_found_meals_set and notifications_enabled and PLYER_AVAILABLE:
+                        notification_title = "odiFinder: New Restaurants!"
+                        # Sort for consistent message order
+                        new_meal_names_str = ", ".join(sorted(list(newly_found_meals_set)))
+                        notification_message = f"New: {new_meal_names_str}"
+                        if len(notification_message) > 250: # Basic truncation for very long lists
+                            notification_message = notification_message[:247] + "..."
+                        try:
+                            plyer_notification.notify(
+                                title=notification_title,
+                                message=notification_message,
+                                app_name="odiFinder",
+                                timeout=10  # Notification display duration in seconds
+                            )
+                            print(f"Sent notification for new meals: {new_meal_names_str}")
+                        except Exception as e:
+                            print(f"Failed to send notification: {e}")
                 else:
                     output_lines.append("No meals found for specified restaurants at this time.")
-                
+
+                previously_found_meal_names = current_meal_names_now # Update for next comparison
+
                 update_gui_display("\n".join(output_lines), refresh_time_str)
                 print(f"GUI Refreshed at {refresh_time_str}. Meals found: {bool(current_meals)}")
 
@@ -345,16 +377,14 @@ def main():
                 error_msg = f"Connection error: {e}.\nAttempting to re-login..."
                 print(error_msg)
                 update_gui_display(error_msg, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-                
-                # Attempt re-login (uses username, password from main's scope)
+
                 new_session = login_to_odi(username, password)
                 if new_session:
-                    session = new_session # Update session in main's scope
+                    session = new_session
                     messagebox.showinfo("Re-login Successful", "Successfully re-logged in. Meals will be refreshed shortly.", parent=app_root)
                     print("Re-login successful. Scheduling another refresh.")
-                    # Schedule a refresh to avoid deep recursion on rapid fails and allow GUI to update
                     if app_root and app_root.winfo_exists():
-                         app_root.after(200, execute_meal_refresh) 
+                         app_root.after(200, execute_meal_refresh)
                 else:
                     relogin_fail_msg = "Failed to re-login. Please check credentials or network. Auto-refresh may fail."
                     messagebox.showerror("Re-login Failed", relogin_fail_msg, parent=app_root)
@@ -365,72 +395,77 @@ def main():
                 print(error_msg)
                 update_gui_display(error_msg, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
-        refresh_button = tk.Button(controls_frame, text="Refresh Now", command=execute_meal_refresh,
+        # Create a frame for buttons
+        button_frame = tk.Frame(controls_frame, bg=WIDGET_COLOR_BG)
+        button_frame.pack(side=tk.RIGHT)
+
+        refresh_button = tk.Button(button_frame, text="Refresh Now", command=execute_meal_refresh,
                                    bg=BUTTON_COLOR_BG, fg=BUTTON_TEXT_COLOR_FG,
                                    activebackground=BUTTON_COLOR_ACTIVE_BG, activeforeground=BUTTON_TEXT_COLOR_FG,
                                    relief=tk.FLAT, borderwidth=0, padx=5, pady=2)
-        refresh_button.pack(side=tk.RIGHT, padx=5)
+        refresh_button.pack(side=tk.LEFT, padx=5)
+
+        exit_button = tk.Button(button_frame, text="Exit", command=lambda: on_app_closing(),
+                                bg=BUTTON_COLOR_BG, fg=BUTTON_TEXT_COLOR_FG,
+                                activebackground=BUTTON_COLOR_ACTIVE_BG, activeforeground=BUTTON_TEXT_COLOR_FG,
+                                relief=tk.FLAT, borderwidth=0, padx=5, pady=2)
+        exit_button.pack(side=tk.LEFT, padx=5)
 
         # --- Periodic Refresh Task ---
-        REFRESH_INTERVAL_MS = 3 * 60 * 1000  # 5 minutes
-        
+        REFRESH_INTERVAL_MS = 3 * 60 * 1000  # 3 minutes (changed from 5 for testing, can be reverted)
+
         def scheduled_refresh_task():
-            nonlocal periodic_refresh_id 
-            if not (app_root and app_root.winfo_exists()): # Stop if window is closed
+            nonlocal periodic_refresh_id
+            if not (app_root and app_root.winfo_exists()):
                 print("Scheduled refresh: Window closed, stopping task.")
                 return
 
             print("Auto-refresh for GUI triggered.")
             execute_meal_refresh()
-            # Schedule the next one only if the window still exists
             if app_root and app_root.winfo_exists():
                  periodic_refresh_id = app_root.after(REFRESH_INTERVAL_MS, scheduled_refresh_task)
             else:
-                 periodic_refresh_id = None # Clear the ID if window is gone
-        
-        # Initial refresh of meal data
+                 periodic_refresh_id = None
+
         execute_meal_refresh()
-        
-        # Schedule the first periodic refresh if app_root is valid
+
         if app_root and app_root.winfo_exists():
             periodic_refresh_id = app_root.after(REFRESH_INTERVAL_MS, scheduled_refresh_task)
 
-        # Handle window closing gracefully
         def on_app_closing():
             nonlocal periodic_refresh_id
             print("Application window closing action initiated.")
             if periodic_refresh_id:
-                if app_root and app_root.winfo_exists(): # Check if app_root is still valid
+                if app_root and app_root.winfo_exists():
                     try:
                         app_root.after_cancel(periodic_refresh_id)
                         print("Cancelled periodic refresh task.")
-                    except tk.TclError: # May happen if window is already being destroyed
+                    except tk.TclError:
                         print("Could not cancel periodic refresh (TclError).")
-                periodic_refresh_id = None 
+                periodic_refresh_id = None
             if app_root and app_root.winfo_exists():
                 app_root.destroy()
                 print("Application window destroyed by on_app_closing.")
 
         app_root.protocol("WM_DELETE_WINDOW", on_app_closing)
-        app_root.mainloop() # Start the Tkinter event loop
+        app_root.mainloop()
 
     except KeyboardInterrupt:
         print("\nProgram terminated by user (Ctrl+C in console).")
     except Exception as e:
         print(f"An unexpected error occurred in the main function: {str(e)}")
         import traceback
-        traceback.print_exc() # Print full traceback for debugging
+        traceback.print_exc()
     finally:
         print("Main function's finally block: Starting cleanup.")
-        
-        # Ensure app_root and its timer are cleaned up if not done by on_app_closing
+
         if app_root and app_root.winfo_exists():
             print("Ensuring app_root cleanup from finally block.")
-            if periodic_refresh_id: # If a timer was set
+            if periodic_refresh_id:
                 try:
                     app_root.after_cancel(periodic_refresh_id)
                     print("Cancelled periodic refresh from finally block.")
-                except Exception: 
+                except Exception:
                     print("Could not cancel periodic refresh from finally block (error during cancel).")
             app_root.destroy()
             print("Destroyed app_root from finally block.")
@@ -440,6 +475,5 @@ def main():
              print("app_root object exists but window was already destroyed.")
 
         print("Main function's finally block: Cleanup attempt finished.")
-
 if __name__ == "__main__":
     main()
