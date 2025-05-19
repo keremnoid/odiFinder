@@ -11,7 +11,7 @@ try:
     sound_available = True
 except ImportError:
     sound_available = False
-    print("Uyarı: winsound module not found. Sound notifications not available.")
+    print("Warning: winsound module not found. Sound notifications not available.")
 from tkinter import simpledialog
 import os
 import tkinter.font as tkFont

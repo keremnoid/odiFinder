@@ -1,6 +1,6 @@
 # odiFinder
 
-A desktop application that automatically checks the available restaurants on [Odi (Öğrenci Dostu İşletme)](getodi.com) and notifies the user.
+A desktop application that automatically checks the available restaurants on [Odi (Öğrenci Dostu İşletme)](https://getodi.com/) and notifies the user.
 
 ## Features
 
