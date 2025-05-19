@@ -9,7 +9,7 @@ A desktop application that automatically checks the available restaurants on [Od
 - Notifications when a target restaurant is found
 - Customizable restaurant list
 - Uses simple Tkinter GUI
-- Automatic periodic refresh (5 minutes, can be changed in the code)
+- Automatic periodic refresh (5 minutes, user can change it in GUI)
 
 ## Installation
 

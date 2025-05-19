@@ -1,18 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
-import time
 from datetime import datetime
 import json
 import tkinter as tk
 from tkinter import messagebox
-# winsound only works on Windows.
-try:
-    import winsound
-    sound_available = True
-except ImportError:
-    sound_available = False
-    print("Warning: winsound module not found. Sound notifications not available.")
-from tkinter import simpledialog
 import os
 import tkinter.font as tkFont
 import locale
@@ -34,7 +25,6 @@ def login_to_odi(username, password):
     try:
         response = session.post(login_url, data=login_data)
         if response.status_code == 200:
-             # Girişin başarılı olup olmadığını yanıtın içeriğini kontrol ederek teyit edin
              # For example, you can check for a text or element that appears after login.
              # Currently, only the status_code is checked, which may not be sufficient.
              print("Login attempt made. Response status code:", response.status_code)
@@ -209,8 +199,8 @@ def main():
 
         # Create the main application window
         app_root = tk.Tk()
-        app_root.title("odiFinder 1.1") # Version updated
-        app_root.geometry("550x450") # Set a reasonable default size
+        app_root.title("odiFinder 1.2") # Version updated
+        app_root.geometry("700x450") # Set a reasonable default size
         app_root.configure(bg=DARK_COLOR_BG)
 
         # --- GUI Elements ---
@@ -220,6 +210,39 @@ def main():
         last_refreshed_label = tk.Label(controls_frame, text="Last Refreshed: N/A",
                                         bg=WIDGET_COLOR_BG, fg=TEXT_COLOR_FG)
         last_refreshed_label.pack(side=tk.LEFT, padx=5)
+
+        # Auto-refresh interval frame
+        interval_frame = tk.Frame(controls_frame, bg=WIDGET_COLOR_BG)
+        interval_frame.pack(side=tk.LEFT, padx=5)
+        interval_label = tk.Label(interval_frame, text="Auto-refresh interval (minutes):", bg=WIDGET_COLOR_BG, fg=TEXT_COLOR_FG)
+        interval_label.pack(side=tk.LEFT, padx=5)
+        interval_entry = tk.Entry(interval_frame, width=5, bg=TEXT_AREA_COLOR_BG, fg=TEXT_AREA_COLOR_FG, insertbackground=TEXT_AREA_COLOR_FG)
+        interval_entry.pack(side=tk.LEFT, padx=5)
+        interval_entry.insert(0, str(settings.get('refresh_interval', 3)))  # Default to 3 minutes if not set
+
+        def save_interval():
+            try:
+                interval = int(interval_entry.get())
+                if interval <= 0:
+                    messagebox.showerror("Error", "Interval must be positive.", parent=app_root)
+                    return
+                settings['refresh_interval'] = interval
+                with open(settings_path, 'w', encoding='utf-8') as f:
+                    json.dump(settings, f, indent=4)
+                print(f"Auto-refresh interval updated to {interval} minutes.")
+                # Update the periodic refresh task
+                if periodic_refresh_id:
+                    app_root.after_cancel(periodic_refresh_id)
+                REFRESH_INTERVAL_MS = interval * 60 * 1000
+                periodic_refresh_id = app_root.after(REFRESH_INTERVAL_MS, scheduled_refresh_task)
+            except ValueError:
+                messagebox.showerror("Error", "Please enter a valid number.", parent=app_root)
+
+        save_interval_button = tk.Button(interval_frame, text="Save", command=save_interval,
+                                         bg=BUTTON_COLOR_BG, fg=BUTTON_TEXT_COLOR_FG,
+                                         activebackground=BUTTON_COLOR_ACTIVE_BG, activeforeground=BUTTON_TEXT_COLOR_FG,
+                                         relief=tk.FLAT, borderwidth=0, padx=5, pady=2)
+        save_interval_button.pack(side=tk.LEFT, padx=5)
 
         # Settings frame for notification toggle and restaurant list
         settings_frame = tk.Frame(app_root, bg=WIDGET_COLOR_BG)
@@ -412,7 +435,7 @@ def main():
         exit_button.pack(side=tk.LEFT, padx=5)
 
         # --- Periodic Refresh Task ---
-        REFRESH_INTERVAL_MS = 3 * 60 * 1000  # 3 minutes (changed from 5 for testing, can be reverted)
+        REFRESH_INTERVAL_MS = settings.get('refresh_interval', 3) * 60 * 1000  # Load from settings, default to 3 minutes
 
         def scheduled_refresh_task():
             nonlocal periodic_refresh_id
