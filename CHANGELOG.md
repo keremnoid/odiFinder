@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.1] - 20 May 2025
+
+### Added
+- Console button in GUI
+
+### Changed
+- Codebase cleaned up, unused imports and legacy code removed.
+- Application modularized: network and ui files separated.
+- UI code fully moved to a separate file and modernized.
+- Fixed background color of buttons in dark mode.
+- Minor bug fixes and code improvements.
+
 ## [1.3.0] - 20 May 2025
 
 ### Added
