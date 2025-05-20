@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox, font as tkFont
+from tkinter import messagebox, ttk, font as tkFont
 import os
 import sys
 import code # For debug console
@@ -204,6 +204,7 @@ class OdiFinderUI:
         
         button_frame_main = tk.Frame(self.controls_frame)
         button_frame_main.pack(side=tk.RIGHT)
+        self.button_frame_main = button_frame_main
         self.refresh_button = tk.Button(button_frame_main, text="Refresh Now", command=self._get_callback('on_refresh_now'), relief=tk.FLAT, borderwidth=0, padx=5, pady=2, highlightthickness=0)
         self.refresh_button.pack(side=tk.LEFT, padx=5)
         
@@ -245,7 +246,7 @@ class OdiFinderUI:
             (self.interval_frame, "WIDGET_BG", None), (self.interval_prompt_label, "WIDGET_BG", "TEXT_FG"),
             (self.save_interval_button, "BUTTON_BG", "BUTTON_TEXT_FG"), 
             (self.refresh_button, "BUTTON_BG", "BUTTON_TEXT_FG"), (self.minimize_button, "BUTTON_BG", "BUTTON_TEXT_FG"),
-            (self.console_button, "BUTTON_BG", "BUTTON_TEXT_FG")
+            (self.console_button, "BUTTON_BG", "BUTTON_TEXT_FG"), (self.button_frame_main, "WIDGET_BG", None)
         ]
 
         for widget, w_bg_key, w_fg_key in widgets_to_theme:
