@@ -1,8 +1,11 @@
 {
     "username": "",
     "restaurants": [
-        "Cafe Rien",
-        "Nazilli Pide Kebap \u00c7orba Salonu",
+        "Rien",
+        "Nazilli",
         "\u00c7\u0131t\u0131r Pide"
-    ]
+    ],
+    "theme": "dark",
+    "city_id": "35",
+    "notifications_enabled": true
 }

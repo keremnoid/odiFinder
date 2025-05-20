@@ -9,7 +9,11 @@ A desktop application that automatically checks the available restaurants on [Od
 - Notifications when a target restaurant is found
 - Customizable restaurant list
 - Uses simple Tkinter GUI
-- Automatic periodic refresh (5 minutes, user can change it in GUI)
+- Automatic periodic refresh (default 3 minutes, user can change it in GUI)
+- Minimize to system tray support
+- Dark/Light theme support
+- City selection support (all cities in Turkey)
+- Minimize to system tray functionality
 
 ## Installation
 
@@ -20,8 +24,14 @@ A desktop application that automatically checks the available restaurants on [Od
    ```
 
 2. **Install required Python packages:**
+
+   - For Windows
    ```sh
-   pip install requests beautifulsoup4 plyer
+   pip install requests beautifulsoup4 winotify pillow pystray
+   ```
+   - For other operating systems
+   ```sh
+   pip install requests beautifulsoup4 plyer pillow pystray
    ```
 
 3. **Run the application:**
@@ -31,11 +41,18 @@ A desktop application that automatically checks the available restaurants on [Od
 
 ## Usage
 
-- Enter your getodi.com username and password in the login window.
-- Edit the restaurant list as you wish.
-- The app will automatically check for your selected restaurants and notify you if they are available.
+- Enter your getodi.com username and password in the login window
+- Edit the restaurant list as you wish
+- Select your city using the city ID (plate number)
+- Toggle between dark and light themes
+- Enable/disable notifications
+- The app will automatically check for your selected restaurants and notify you if they are available
+- Click "Minimize" to send the app to system tray
+- Right-click the system tray icon to show the window or exit the application
 
 ## Notes
 
-- Works only for İzmir city by default (can be changed in the code by changing the restaurant list link).
-- Settings are saved in `settings.json` in the same folder.
+- Settings are saved in `settings.json` in the same folder
+- The app uses your system's default notification system
+- City IDs can be found in the Turkish license plate system (e.g., 35 for İzmir)
+- The app will continue running in the system tray when minimized
