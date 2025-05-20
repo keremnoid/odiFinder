@@ -29,7 +29,7 @@ except ImportError:
 locale.setlocale(locale.LC_ALL, 'tr_TR.UTF-8')
 
 class OdiFinderApp:
-    APP_VERSION = "1.3s.1"
+    APP_VERSION = "1.3.1"
 
     def __init__(self):
         self.session: Optional[requests.Session] = None
