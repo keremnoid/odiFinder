@@ -12,8 +12,7 @@ A desktop application that automatically checks the available restaurants on [Od
 - Automatic periodic refresh (default 3 minutes, user can change it in GUI)
 - Minimize to system tray support
 - Dark/Light theme support
-- City selection support (all cities in Turkey)
-- Minimize to system tray functionality
+- City selection support
 
 ## Installation
 
@@ -41,9 +40,9 @@ A desktop application that automatically checks the available restaurants on [Od
 
 ## Usage
 
-- Enter your getodi.com username and password in the login window
+- Enter your getodi.com username (your student e-mail) and password in the login window
 - Edit the restaurant list as you wish
-- Select your city using the city ID (plate number)
+- Select your city using the city ID (plate number, 35 for Izmir, 34 for Istanbul etc.)
 - Toggle between dark and light themes
 - Enable/disable notifications
 - The app will automatically check for your selected restaurants and notify you if they are available
@@ -54,5 +53,4 @@ A desktop application that automatically checks the available restaurants on [Od
 
 - Settings are saved in `settings.json` in the same folder
 - The app uses your system's default notification system
-- City IDs can be found in the Turkish license plate system (e.g., 35 for İzmir)
 - The app will continue running in the system tray when minimized
