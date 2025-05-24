@@ -63,7 +63,7 @@ If you downloaded the Windows release (`odiFinder.exe`), you can simply double-c
 
 Main Screen:
 
-![Main Screen](https://github.com/keremnoid/odiFinder/blob/main/Screenshots/main.png?raw=true)
+![Main Screen](https://github.com/keremnoid/odiFinder/blob/main/Screenshots/mainScreen.png?raw=true)
 
 A notification:
 
