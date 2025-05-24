@@ -42,10 +42,6 @@ If you downloaded the Windows release (`odiFinder.exe`), you can simply double-c
    python odiFinder.pyw
    ```
 
-**Windows users:**
-
-If you downloaded the Windows release (`odiFinder.exe`), you can simply double-click the `.exe` file to run the program. You do **not** need to install Python or any dependencies.
-
 ## Usage
 
 - Enter your getodi.com username (your student e-mail) and password in the login window
@@ -62,3 +58,17 @@ If you downloaded the Windows release (`odiFinder.exe`), you can simply double-c
 - Settings are saved in `settings.json` in the same folder
 - The app uses your system's default notification system
 - The app will continue running in the system tray when minimized
+
+## Screenshots
+
+Main Screen:
+
+![Main Screen](https://github.com/keremnoid/odiFinder/blob/main/Screenshots/main.png?raw=true)
+
+A notification:
+
+![Notification](https://github.com/keremnoid/odiFinder/blob/main/Screenshots/notification.png?raw=true)
+
+Restaurant list panel:
+
+![Restaurant list panel](https://github.com/keremnoid/odiFinder/blob/main/Screenshots/restaurantlist.png?raw=true)
