@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox, font as tkFont
+from tkinter import messagebox, ttk, font as tkFont
 import os
 import sys
 import code # For debug console
@@ -34,6 +34,7 @@ class OdiFinderUI:
         self.app_root = None
         self.login_window = None
         self.system_tray_icon = None # Managed by main app, but UI might interact
+        self.tooltip = None  # Initialize tooltip attribute
 
         self.username_entry = None
         self.password_entry = None
@@ -182,6 +183,25 @@ class OdiFinderUI:
         self.theme_toggle_button = tk.Button(self.settings_frame, text="Light Mode" if self.current_theme_name == "dark" else "Dark Mode", command=self._get_callback('on_toggle_theme'), relief=tk.FLAT, borderwidth=0, padx=5, pady=2)
         self.theme_toggle_button.pack(side=tk.LEFT, padx=5)
 
+        # Add reset settings button with trash can icon
+        self.reset_settings_button = tk.Button(
+            self.settings_frame,
+            text="🗑",  # Trash can emoji
+            command=self._get_callback('on_reset_settings'),
+            relief=tk.FLAT,
+            borderwidth=0,
+            padx=5,
+            pady=2,
+            font=("Segoe UI Emoji", 10),  # Use emoji font for better icon display
+            bg=self.active_colors["BUTTON_BG"],
+            fg=self.active_colors["BUTTON_TEXT_FG"],
+            activebackground=self.active_colors["BUTTON_ACTIVE_BG"],
+            activeforeground=self.active_colors["BUTTON_TEXT_FG"]
+        )
+        self.reset_settings_button.pack(side=tk.LEFT, padx=5)
+        # Add tooltip
+        self._create_tooltip(self.reset_settings_button, "Reset all settings to default")
+
         self.meals_text_area = tk.Text(self.app_root, wrap=tk.WORD, height=15, width=60, font=tkFont.Font(family="Arial", size=12), relief=tk.SOLID, borderwidth=1, bd=1, state=tk.DISABLED)
         self.meals_text_area.pack(padx=10, pady=(0,10), fill=tk.BOTH, expand=True)
 
@@ -279,6 +299,9 @@ class OdiFinderUI:
                  self._debug_console_state["input_entry_widget"].configure(bg=self.active_colors["TEXT_AREA_BG"], fg=self.active_colors["TEXT_AREA_FG"], insertbackground=self.active_colors["ENTRY_INSERT_BG"])
                  if self._debug_console_state.get("debug_run_button") and self._debug_console_state["debug_run_button"].winfo_exists():
                      self._debug_console_state["debug_run_button"].configure(bg=self.active_colors["BUTTON_BG"], fg=self.active_colors["BUTTON_TEXT_FG"], activebackground=self.active_colors["BUTTON_ACTIVE_BG"], activeforeground=self.active_colors["BUTTON_TEXT_FG"])
+
+        if self.reset_settings_button and self.reset_settings_button.winfo_exists():
+            self.reset_settings_button.configure(bg=self.active_colors["BUTTON_BG"], fg=self.active_colors["BUTTON_TEXT_FG"], activebackground=self.active_colors["BUTTON_ACTIVE_BG"], activeforeground=self.active_colors["BUTTON_TEXT_FG"])
 
     def update_meals_display(self, text_to_display, refresh_time_str):
         if not (self.app_root and self.app_root.winfo_exists()): return
@@ -457,4 +480,47 @@ class OdiFinderUI:
         
     def quit_main_loop(self):
         if self.app_root and self.app_root.winfo_exists():
-            self.app_root.quit() 
+            self.app_root.quit()
+
+    def _create_tooltip(self, widget, text):
+        """Create a tooltip for a given widget"""
+        def show_tooltip(event):
+            x, y, _, _ = widget.bbox("insert")
+            x += widget.winfo_rootx() + 25
+            y += widget.winfo_rooty() + 25
+            
+            # Create a toplevel window
+            self.tooltip = tk.Toplevel(widget)
+            # Leaves only the label and removes the app window
+            self.tooltip.wm_overrideredirect(True)
+            self.tooltip.wm_geometry(f"+{x}+{y}")
+            
+            label = tk.Label(self.tooltip, text=text, justify=tk.LEFT,
+                           background="#ffffe0", relief=tk.SOLID, borderwidth=1,
+                           font=("tahoma", 8))  # Fixed font tuple
+            label.pack(ipadx=1)
+            
+        def hide_tooltip(event):
+            if self.tooltip is not None:
+                self.tooltip.destroy()
+                self.tooltip = None
+                
+        widget.bind('<Enter>', show_tooltip)
+        widget.bind('<Leave>', hide_tooltip)
+
+    def update_settings_display(self, settings):
+        """Update UI elements with new settings values"""
+        if self.username_entry:
+            self.username_entry.delete(0, tk.END)
+            self.username_entry.insert(0, settings.get('username', ''))
+        
+        if self.notifications_var:
+            self.notifications_var.set(settings.get('notifications_enabled', True))
+            
+        if self.city_id_entry:
+            self.city_id_entry.delete(0, tk.END)
+            self.city_id_entry.insert(0, settings.get('city_id', '35'))
+            
+        if self.interval_entry:
+            self.interval_entry.delete(0, tk.END)
+            self.interval_entry.insert(0, str(settings.get('refresh_interval', 3))) 

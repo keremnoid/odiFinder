@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 24 May 2025
+
+### Added
+- FIRST WINDOWS RELEASE! Now users can just run the .exe file to access the odiFinder.
+- On Windows: The settings file (settings.json) is now stored under %APPDATA%/odiFinder/ when running as an exe, and in the current directory when running as a script.
+- A trash can "reset settings" button was added to the UI, allowing users to reset all settings with a single click.
+
+### Fixed
+- Various issues and conflicts during settings reset have been resolved.
+
 ## [1.3.1] - 20 May 2025
 
 ### Added

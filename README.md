@@ -17,6 +17,10 @@ A desktop application that automatically checks the available restaurants on [Od
 
 ## Installation
 
+**FOR WINDOWS USERS:**
+
+If you downloaded the Windows release (`odiFinder.exe`), you can simply double-click the `.exe` file to run the program. You do **not** need to install Python or any dependencies.
+
 1. **Clone the repository:**
    ```sh
    git clone https://github.com/keremnoid/odiFinder.git
@@ -38,6 +42,10 @@ A desktop application that automatically checks the available restaurants on [Od
    ```sh
    python odiFinder.pyw
    ```
+
+**Windows users:**
+
+If you downloaded the Windows release (`odiFinder.exe`), you can simply double-click the `.exe` file to run the program. You do **not** need to install Python or any dependencies.
 
 ## Usage
 

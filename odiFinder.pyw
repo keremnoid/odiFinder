@@ -6,7 +6,7 @@ import locale
 from typing import Optional, List, Dict, Any, Set
 import platform
 import webbrowser
-
+import sys
 from ui import OdiFinderUI
 from network import login_to_odi, check_meals
 
@@ -28,8 +28,32 @@ except ImportError:
 
 locale.setlocale(locale.LC_ALL, 'tr_TR.UTF-8')
 
+def get_settings_path():
+    if getattr(sys, 'frozen', False):  # Eğer exe'den çalışıyorsa
+        if platform.system() == "Windows":
+            appdata = os.getenv("APPDATA")
+            if appdata:
+                settings_dir = os.path.join(appdata, "odiFinder")
+            else:
+                # Fallback: use user home directory if APPDATA is not set
+                settings_dir = os.path.join(os.path.expanduser("~"), "odiFinder")
+            os.makedirs(settings_dir, exist_ok=True)
+            return os.path.join(settings_dir, "settings.json")
+        else:
+            # Diğer platformlar için fallback
+            return os.path.join(os.path.expanduser("~"), ".odiFinder_settings.json")
+    else:  # py dosyasından çalışıyorsa
+        return os.path.join(os.path.dirname(os.path.abspath(__file__)), "settings.json")
+
+# PyInstaller resource path helper
+def resource_path(relative_path):
+    base_path = getattr(sys, '_MEIPASS', None)
+    if base_path:
+        return os.path.join(base_path, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
 class OdiFinderApp:
-    APP_VERSION = "1.3.1"
+    APP_VERSION = "1.4.0"
 
     def __init__(self):
         self.session: Optional[requests.Session] = None
@@ -46,8 +70,8 @@ class OdiFinderApp:
         self.settings: Dict[str, Any] = {}
         self._cleanup_called_flag = False
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
-        self.icon_path = os.path.join(self.script_dir, 'odiFinderlogo.ico')
-        self.settings_path = os.path.join(self.script_dir, 'settings.json')
+        self.icon_path = resource_path('odiFinderlogo.ico')
+        self.settings_path = get_settings_path()
         self.plyer_notification_available = False
         self.plyer_notification = None
         if platform.system() != "Windows":

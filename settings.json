@@ -1,11 +1,8 @@
 {
     "username": "",
-    "restaurants": [
-        "Rien",
-        "Nazilli",
-        "\u00c7\u0131t\u0131r Pide"
-    ],
+    "restaurants": [    ],
+    "notifications_enabled": true,
     "theme": "dark",
     "city_id": "35",
-    "notifications_enabled": true
+    "refresh_interval": 3
 }
