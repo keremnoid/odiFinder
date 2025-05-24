@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox, ttk, font as tkFont
+from tkinter import messagebox, ttk, font as tkFont
 import os
 import sys
 import code # For debug console
