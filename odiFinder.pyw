@@ -53,7 +53,7 @@ def resource_path(relative_path):
     return os.path.join(os.path.abspath("."), relative_path)
 
 class OdiFinderApp:
-    APP_VERSION = "1.4.0"
+    APP_VERSION = "1.4.1"
 
     def __init__(self):
         self.session: Optional[requests.Session] = None

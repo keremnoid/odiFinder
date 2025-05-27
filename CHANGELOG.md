@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.1] - 27 May 2025
+
+### Fixed
+- Fixed an error where meals with 0 available count were incorrectly included in results.
+
 ## [1.4.0] - 24 May 2025
 
 ### Added

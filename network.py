@@ -1,3 +1,8 @@
+"""
+Changelog:
+2024-03-21: Fixed an error where meals with 0 suspended count were incorrectly included in results
+"""
+
 import requests
 from bs4 import BeautifulSoup, Tag
 import re
@@ -74,18 +79,19 @@ def check_meals(session: requests.Session, target_texts: List[str], city_id: str
                                     except ValueError:
                                         print(f"Could not convert suspended count to int: '{match.group(1)}' for {target_text}")
                         
-                        actual_restaurant_name_display = menu_title_text or restaurant_name_text or target_text
-                        actual_description = menu_details_text or "No description available."
+                        if suspended_count > 0:
+                            actual_restaurant_name_display = menu_title_text or restaurant_name_text or target_text
+                            actual_description = menu_details_text or "No description available."
 
-                        meal_info = {
-                            'name': actual_restaurant_name_display,
-                            'description': actual_description,
-                            'suspended_count': suspended_count,
-                            'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                        }
-                        meals_data.append(meal_info)
-                        found_meals.add(target_text)
-                        break 
+                            meal_info = {
+                                'name': actual_restaurant_name_display,
+                                'description': actual_description,
+                                'suspended_count': suspended_count,
+                                'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            }
+                            meals_data.append(meal_info)
+                            found_meals.add(target_text)
+                            break 
             
             return meals_data
         else:
