@@ -53,7 +53,7 @@ def resource_path(relative_path):
     return os.path.join(os.path.abspath("."), relative_path)
 
 class OdiFinderApp:
-    APP_VERSION = "1.4.1"
+    APP_VERSION = "1.4.2"
 
     def __init__(self):
         self.session: Optional[requests.Session] = None
@@ -234,8 +234,8 @@ class OdiFinderApp:
             output_lines, current_meal_names_now = [], set()
             if current_meals:
                 for meal in current_meals:
-                    output_lines.extend([f"Restaurant: {meal['name']}", f"Description: {meal['description']}", f"Meals available: {meal['suspended_count']}", "-" * 40])
-                    current_meal_names_now.add(meal['name'])
+                    output_lines.extend([f"Restaurant: {meal['restaurant_name']}", f"Meal: {meal['meal_name']}", f"Location: {meal['location']}", f"Status: Available", "-" * 40])
+                    current_meal_names_now.add(meal['restaurant_name'])
                 newly_found = current_meal_names_now - self.previously_found_meal_names
                 if newly_found and self.notifications_enabled:
                     self._send_notification(f"New: {', '.join(sorted(list(newly_found)))}"[:250])

@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.2] - 18 June 2025
+
+### Changed
+- Updated to work with the new website interface structure
+- Replaced suspended meal count checking with "Askıdan Ücretsiz Al" button availability detection
+- Improved data parsing to correctly extract information according to new HTML structure:
+- Updated display format to show: Restaurant, Meal, Location, and Status instead of previous format
+- Removed meal count display as it's no longer relevant with the new system
+
+### Fixed
+- Fixed compatibility issues with the updated getodi.com website structure
+
 ## [1.4.1] - 27 May 2025
 
 ### Fixed
