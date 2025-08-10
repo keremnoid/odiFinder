@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.3] - 10 August 2025
+
+### Changed
+- Updated to work with the new website interface structure
+- Brought back the old display format (available meal count is back).
+
 ## [1.4.2] - 18 June 2025
 
 ### Changed

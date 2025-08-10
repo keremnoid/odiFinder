@@ -2,6 +2,7 @@
 Changelog:
 2024-03-21: Fixed an error where meals with 0 suspended count were incorrectly included in results
 2024-12-XX: Updated to check for "Askıdan Ücretsiz Al" button instead of counting suspended meals
+2025-08-10: Updated to detect availability via "Bu menüyü askıdan al <N>" where N>0 means available
 """
 
 import requests
@@ -40,7 +41,9 @@ def login_to_odi(username, password) -> Optional[requests.Session]:
 def check_meals(session: requests.Session, target_texts: List[str], city_id: str = "35") -> Optional[List[Dict[str, Any]]]:
     """
     Uses the session to check the meals page and search for target texts.
-    Returns a list of found meals with available "Askıdan Ücretsiz Al" button, or None if there is an error.
+    New logic: A restaurant is considered available if the text matches
+    "Bu menüyü askıdan al <N>" and N is greater than 0. If N is 0, it's not available.
+    Returns a list of found meals or None if there is an error.
     """
     meals_url = f"https://getodi.com/student/?city={city_id}"
     try:
@@ -67,44 +70,18 @@ def check_meals(session: requests.Session, target_texts: List[str], city_id: str
 
                 for target_text in target_texts:
                     if target_text.lower() in searchable_text_content and target_text not in found_meals:
-                        # First check if there's a message indicating no meals left
-                        all_text_in_menu_box = menu_box.get_text(strip=True).lower()
-                        if 'askıda yemek kalmadı' in all_text_in_menu_box or 'askıda yemek yok' in all_text_in_menu_box:
-                            # Skip this restaurant - no meals available
+                        # Extract text from this menu box and search for pattern: "Bu menüyü askıdan al <N>"
+                        all_text_in_menu_box_original = menu_box.get_text(" ", strip=True)
+                        match = re.search(r"bu menüyü askıdan al\s*(\d+)", all_text_in_menu_box_original, flags=re.IGNORECASE)
+                        if not match:
+                            # If pattern not found, skip this menu box
                             continue
-                            
-                        # Check if "Askıdan Ücretsiz Al" button is available and active
-                        free_button_available = False
-                        
-                        # Look for elements containing "askıdan" and "ücretsiz" text
-                        button_containers = menu_box.find_all(['button', 'a', 'div'])
-                        for container in button_containers:
-                            if isinstance(container, Tag):
-                                container_text = container.get_text(strip=True).lower()
-                                if 'askıdan' in container_text and 'ücretsiz' in container_text:
-                                    # Check if button is not disabled
-                                    disabled_attr = container.get('disabled')
-                                    class_attr = container.get('class')
-                                    onclick_attr = container.get('onclick')
-                                    
-                                    # Check for disabled class
-                                    if class_attr is None:
-                                        disabled_in_class = False
-                                    elif isinstance(class_attr, list):
-                                        disabled_in_class = 'disabled' in class_attr
-                                    else:
-                                        disabled_in_class = 'disabled' in str(class_attr)
-                                    
-                                    # Check for onclick="return false;" which indicates no meals available
-                                    onclick_disabled = onclick_attr and 'return false' in str(onclick_attr)
-                                    
-                                    if not disabled_attr and not disabled_in_class and not onclick_disabled:
-                                        # Additional check - button should not have text indicating unavailability
-                                        if 'yok' not in container_text and 'bitti' not in container_text:
-                                            free_button_available = True
-                                            break
-                        
-                        if free_button_available:
+                        try:
+                            suspended_count = int(match.group(1))
+                        except ValueError:
+                            suspended_count = 0
+
+                        if suspended_count > 0:
                             actual_restaurant_name_display = menu_title_text or restaurant_name_text or target_text
                             actual_meal_name = restaurant_name_text or "No meal name available."
                             actual_location = menu_details_text or "No location available."
@@ -113,6 +90,7 @@ def check_meals(session: requests.Session, target_texts: List[str], city_id: str
                                 'restaurant_name': actual_restaurant_name_display,
                                 'meal_name': actual_meal_name,
                                 'location': actual_location,
+                                'available_count': suspended_count,
                                 'available': True,
                                 'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                             }
